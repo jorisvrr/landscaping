@@ -20,7 +20,7 @@ database, geen CMS, geen auth. Klaar voor Vercel.
 | Telefoonnummer en WhatsApp (`+31 6 1234 5678`) | `siteConfig.business.phone` / `.whatsapp` |
 | Alle reviews, het cijfer 4,9 en "127 reviews" | `siteConfig.reviews` / `siteConfig.trust` |
 | Alle projecten (stockfoto's, verzonnen omschrijvingen) | `siteConfig.projects` |
-| Alle richtprijzen | `siteConfig.services[].priceIndication` |
+| Alle richtprijzen | `siteConfig.services[].priceIndication` — **standaard verborgen**, zie `display.showPriceIndications` |
 | Demo-labels en -teksten | `siteConfig.demoLabels` |
 | Privacyverklaring en voorwaarden | `src/app/privacy`, `src/app/voorwaarden` |
 
@@ -66,17 +66,30 @@ Volgorde die het snelst werkt:
    regiosectie, de footer, de plaats-autocomplete in het formulier en de
    `areaServed` in de schema.org-data.
 4. **`hero`** — eyebrow, kop, subkop, foto, drie badges.
-5. **`services`** — de diensten die dit bedrijf écht levert, met richtprijzen.
+5. **`claims`** (bovenaan het bestand) — álle beloftes die de site doet:
+   reactietermijn, hoe snel er langsgekomen wordt, gratis tuinbezoek, vaste
+   prijs, garantietermijn en eigen vakmensen. Pas de waarde aan, of zet 'm op
+   `null` / `false` en de claim verdwijnt overal — badges, trust strip,
+   garantielijst, USP's, werkwijze en formulier passen zich vanzelf aan.
+   Beloof hier niets wat de klant niet waarmaakt.
+6. **`display.showPriceIndications`** — richtprijzen aan of uit. Staat **uit**
+   in het master-template, omdat een hovenier met andere tarieven afhaakt op
+   bedragen die niet de zijne zijn. Zet aan zodra de echte tarieven in
+   `services[].priceIndication` staan.
+7. **`services`** — de diensten die dit bedrijf écht levert.
    `inQuoteFlow: true` zet een dienst ook als keuze in stap 1 van het
    offerteformulier.
    Zie ook **`guarantees`** (de harde toezeggingen), **`conversionBridge`**
    (het blokje halverwege de pagina) en **`quote`** (alle vraagteksten, keuzes
    en knoplabels van het formulier).
-6. **`projects`** — vervang door eigen projectfoto's van de klant. Een project
+8. **`projects`** — vervang door eigen projectfoto's van de klant. Een project
    met `beforeImage` krijgt automatisch de voor/na-schuifbalk.
-7. **`reviews`** + **`trust`** — echte reviews, of `reviewsSection.show: false`.
-8. **`seo`** — title, description, `url` (canonical, OG en sitemap).
-9. **`demoMode: false`**.
+9. **`reviews`** + **`trust`** — echte reviews, of `reviewsSection.show: false`.
+   Vul **`reviewsSection.googleProfileUrl`** pas in als de klant een geldig
+   Google Bedrijfsprofiel heeft; zolang die `null` is, staat er geen link naar
+   Google maar de tekst "Hier komen echte Google-reviews".
+10. **`seo`** — title, description, `url` (canonical, OG en sitemap).
+11. **`demoMode: false`**.
 
 **Logo:** zet een bestand in `public/` en vul `business.logoSrc` (bijv.
 `"/logo.svg"`). Blijft dat `null`, dan gebruikt de site het blad-beeldmerk plus
@@ -97,7 +110,8 @@ huidige foto's.
 | Spam | Geen bescherming | Honeypot-veld of Cloudflare Turnstile toevoegen vóór livegang |
 | Gratis tuinbezoek | Het formulier stuurt alleen `wantsVisit: true/false` mee; er zit géén agenda achter en de site belooft alleen dat er gebeld wordt | Wil de klant echt laten boeken: koppel Calendly/Cal.com of een eigen agenda op dat veld in `src/app/api/quote/route.ts` |
 | Telefoon / WhatsApp | Placeholdernummer | Echt nummer in `business.phone` + `business.whatsapp` |
-| Reviews | Demo-content | Echte Google-reviews overnemen (met toestemming) of een widget plaatsen; daarna `seo.includeAggregateRating` aanzetten |
+| Reviews | Demo-content, zonder link naar Google | Echte Google-reviews overnemen (met toestemming) of een widget plaatsen, `reviewsSection.googleProfileUrl` vullen, daarna `seo.includeAggregateRating` aanzetten |
+| Richtprijzen | Verborgen (`display.showPriceIndications: false`) | Echte tarieven invullen en de vlag aanzetten |
 | Juridisch | Placeholderteksten | Privacyverklaring en algemene voorwaarden laten opstellen/controleren |
 | Analytics | Niet aanwezig | Vercel Analytics of Plausible toevoegen (bewust weggelaten: scheelt gewicht en cookiebanner in de demo) |
 | Google Business Profile | — | `reviewsSection.googleProfileUrl` naar het echte profiel laten wijzen |

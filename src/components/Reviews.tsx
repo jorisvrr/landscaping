@@ -75,15 +75,24 @@ export function Reviews() {
                 {trust.reviewSource}-beoordeling
               </p>
               <p>{trust.reviewCount} reviews</p>
-              <a
-                href={reviewsSection.googleProfileUrl}
-                target="_blank"
-                rel="noopener"
-                className="mt-0.5 inline-flex items-center gap-1 font-semibold text-accent hover:underline"
-              >
-                Bekijk op Google
-                <ArrowRightIcon className="h-3.5 w-3.5" />
-              </a>
+              {/* Pas een echte link zodra er een Google Bedrijfsprofiel is.
+                  Zonder profiel zou een knop naar Google suggereren dat deze
+                  voorbeeldreviews daar te vinden zijn. */}
+              {reviewsSection.googleProfileUrl ? (
+                <a
+                  href={reviewsSection.googleProfileUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="mt-0.5 inline-flex items-center gap-1 font-semibold text-accent hover:underline"
+                >
+                  {reviewsSection.googleLinkLabel}
+                  <ArrowRightIcon className="h-3.5 w-3.5" />
+                </a>
+              ) : (
+                <span className="mt-0.5 block font-medium text-muted italic">
+                  {reviewsSection.googlePlaceholderLabel}
+                </span>
+              )}
             </div>
           </div>
         </div>

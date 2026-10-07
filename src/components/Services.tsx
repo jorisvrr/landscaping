@@ -8,7 +8,14 @@ import { ArrowRightIcon, CheckIcon } from "./ui/Icons";
  * richtprijs — de informatie waar klanten in deze branche op zoeken.
  */
 export function Services() {
-  const { services, servicesIntro, cta } = siteConfig;
+  const { services, servicesIntro, cta, display, demoMode } = siteConfig;
+  /**
+   * Richtprijzen staan standaard uit in het master-template (zie
+   * site.ts → display.showPriceIndications). Staan ze aan terwijl de site nog
+   * in demomodus draait, dan worden ze expliciet als voorbeeld gelabeld.
+   */
+  const showPrices = display.showPriceIndications;
+  const priceSuffix = demoMode ? " (voorbeeldprijs)" : "";
   const [lead, ...rest] = services;
 
   return (
@@ -53,9 +60,10 @@ export function Services() {
                 ))}
               </ul>
               <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
-                {lead.priceIndication && (
+                {showPrices && lead.priceIndication && (
                   <span className="text-sm font-semibold text-brand">
                     {lead.priceIndication}
+                    {priceSuffix}
                   </span>
                 )}
                 <a
@@ -97,9 +105,10 @@ export function Services() {
                     </li>
                   ))}
                 </ul>
-                {service.priceIndication && (
+                {showPrices && service.priceIndication && (
                   <p className="mt-auto pt-5 text-sm font-semibold text-brand">
                     {service.priceIndication}
+                    {priceSuffix}
                   </p>
                 )}
               </div>

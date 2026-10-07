@@ -61,12 +61,67 @@ export type Review = {
   date: string;
 };
 
+/**
+ * ============================================================================
+ *  CLAIMS — alles wat dit bedrijf aan de klant BELOOFT.
+ * ============================================================================
+ *  Dit zijn de enige harde, bedrijfsspecifieke toezeggingen op de site. Ze
+ *  staan hier los, zodat je ze bij het personaliseren voor een prospect in
+ *  één oogopslag kunt nalopen: pas de waarde aan, of zet 'm op `null` /
+ *  `false` en de claim verdwijnt overal waar hij voorkomt — badges, trust
+ *  strip, garantielijst, USP's, werkwijze, formulier en FAQ.
+ *
+ *  Beloof niets wat de klant niet waarmaakt: dit is precies het soort tekst
+ *  waar iemand je later op afrekent.
+ * ============================================================================
+ */
+const claims = {
+  /** Reactietermijn op een aanvraag. null = termijn wordt nergens genoemd. */
+  responseTime: "2 werkdagen" as string | null,
+  /** Hoe snel er langsgekomen wordt voor een tuinbezoek. null = niet noemen. */
+  visitLeadTime: "een week" as string | null,
+  /** Gratis en vrijblijvend tuinbezoek. */
+  freeVisit: true,
+  /** Vaste prijs vooraf, offerte per onderdeel. */
+  fixedPrice: true,
+  /** Garantietermijn in jaren op uitvoering. null = geen garantieclaim. */
+  warrantyYears: 2 as number | null,
+  /** Werkt met eigen mensen in plaats van onderaannemers. */
+  ownStaff: true,
+};
+
+/** Houdt alleen de ingeschakelde items over, met behoud van het type. */
+function enabled<T>(
+  items: (T | null | false | undefined | "" | 0)[],
+): T[] {
+  return items.filter((item): item is T => Boolean(item));
+}
+
+/** "2 werkdagen" -> "binnen 2 werkdagen", of een nette terugvaltekst. */
+const within = (value: string | null, fallback: string) =>
+  value ? `binnen ${value}` : fallback;
+
 export const siteConfig = {
   /**
    * demoMode = true toont overal subtiele "voorbeeld"-labels en een
    * demo-balk bovenaan. Zet op false voor een echte klant.
    */
   demoMode: true,
+
+  /**
+   * Weergave-opties die per prospect verschillen.
+   */
+  display: {
+    /**
+     * Richtprijzen bij de diensten tonen.
+     *
+     * Staat BEWUST uit in het herbruikbare master-template: de bedragen in
+     * `services[].priceIndication` zijn voorbeelden, en een hovenier die
+     * andere tarieven hanteert haakt af zodra hij prijzen ziet die niet de
+     * zijne zijn. Zet 'm aan zodra de echte tarieven ingevuld zijn.
+     */
+    showPriceIndications: false,
+  },
 
   /** Teksten die alleen zichtbaar zijn zolang demoMode aan staat. */
   demoLabels: {
@@ -196,11 +251,11 @@ export const siteConfig = {
    * bewust één lijst, zodat ze overal hetzelfde zijn. Alleen opnemen wat het
    * bedrijf ook daadwerkelijk waarmaakt.
    */
-  guarantees: [
-    "Gratis tuinbezoek en advies op locatie",
-    "Offerte gespecificeerd per onderdeel",
+  guarantees: enabled([
+    claims.freeVisit && "Gratis tuinbezoek en advies op locatie",
+    claims.fixedPrice && "Offerte gespecificeerd per onderdeel",
     "Geen verplichtingen, geen verkooppraatje",
-  ],
+  ]),
 
   // ─────────────────────────────────────────────────────────────── REGIO ────
   serviceArea: {
@@ -240,12 +295,12 @@ export const siteConfig = {
     image: "/img/hero-tuinaanleg.jpg",
     imageAlt:
       "Aangelegde tuin met natuurstenen trap, strakke hagen en bestrating",
-    /** Max 3. Alleen claims die ook waargemaakt worden. */
-    badges: [
-      "Gratis tuinbezoek",
-      "Vaste prijs vooraf",
-      "2 jaar werkgarantie",
-    ],
+    /** Max 3. Afgeleid van `claims` bovenaan dit bestand. */
+    badges: enabled([
+      claims.freeVisit && "Gratis tuinbezoek",
+      claims.fixedPrice && "Vaste prijs vooraf",
+      claims.warrantyYears && `${claims.warrantyYears} jaar werkgarantie`,
+    ]),
   },
 
   // ───────────────────────────────────────────────────────── TRUST STRIP ────
@@ -258,11 +313,13 @@ export const siteConfig = {
     reviewCount: 127,
     reviewSource: "Google",
     reviewsUrl: "#reviews",
-    items: [
-      { label: "Gratis en vrijblijvend advies aan huis" },
-      { label: "Binnen 2 werkdagen een reactie" },
-      { label: "Eigen vakmensen, geen onderaannemers" },
-    ],
+    items: enabled([
+      claims.freeVisit && { label: "Gratis en vrijblijvend advies aan huis" },
+      claims.responseTime && {
+        label: `Binnen ${claims.responseTime} een reactie`,
+      },
+      claims.ownStaff && { label: "Eigen vakmensen, geen onderaannemers" },
+    ]),
   },
 
   // ─────────────────────────────────────────────────────────────── USP'S ────
@@ -274,16 +331,16 @@ export const siteConfig = {
       "De meeste mensen die ons bellen hebben al een keer een offerte gemist of een aannemer niet meer teruggezien. Daarom hebben we het zo geregeld:",
     image: "/img/team-aan-het-werk.jpg",
     imageAlt: "Hovenier van Groenveld aan het werk in een tuin",
-    reasons: [
+    reasons: enabled([
       {
         title: "U krijgt altijd antwoord",
-        body: "Binnen 2 werkdagen een reactie op uw aanvraag, en tijdens het werk heeft u het nummer van uw vaste contactpersoon.",
+        body: `${claims.responseTime ? `Binnen ${claims.responseTime} een reactie op uw aanvraag, en tijdens` : "Tijdens"} het werk heeft u het nummer van uw vaste contactpersoon.`,
       },
-      {
+      claims.fixedPrice && {
         title: "Vaste prijs vooraf",
         body: "De offerte is gespecificeerd per onderdeel. Meerwerk gebeurt alleen na uw akkoord, dus u weet wat u betaalt.",
       },
-      {
+      claims.ownStaff && {
         title: "Eigen vakmensen",
         body: "Onze eigen ploegen leggen aan en bestraten. Geen wisselende onderaannemers in uw tuin.",
       },
@@ -291,15 +348,15 @@ export const siteConfig = {
         title: "Wij denken mee over onderhoud",
         body: "Een tuin die te veel werk kost wordt niet gebruikt. We kiezen beplanting die bij uw situatie past.",
       },
-      {
-        title: "2 jaar werkgarantie",
+      claims.warrantyYears && {
+        title: `${claims.warrantyYears} jaar werkgarantie`,
         body: "Op aanleg, bestrating en constructies. Zakt er iets? Dan komen we terug.",
       },
       {
         title: "Netjes opgeleverd",
         body: "Afvoer van puin en groenafval zit in de prijs. De straat voor uw deur laten we schoon achter.",
       },
-    ],
+    ]),
   },
 
   // ───────────────────────────────────────────────────────────── DIENSTEN ────
@@ -494,7 +551,7 @@ export const siteConfig = {
       },
       {
         title: "Gratis tuinbezoek",
-        body: "We komen binnen een week langs, meten op en denken mee over wat haalbaar is binnen uw budget.",
+        body: `We komen ${within(claims.visitLeadTime, "op een moment dat u uitkomt")} langs, meten op en denken mee over wat haalbaar is binnen uw budget.`,
       },
       {
         title: "Offerte met vaste prijs",
@@ -521,8 +578,19 @@ export const siteConfig = {
     show: true,
     eyebrow: "Reviews",
     title: "Wat klanten over ons zeggen",
-    /** Link naar het echte Google-bedrijfsprofiel van de klant */
-    googleProfileUrl: "https://www.google.com/maps",
+    /**
+     * Link naar het échte Google-bedrijfsprofiel van de klant.
+     *
+     * Blijft `null` in het master-template: de reviews hiernaast zijn
+     * voorbeelden, en dan hoort er geen knop te staan die naar Google wijst
+     * alsof het om echte beoordelingen gaat. Zodra een klant een geldig
+     * Google Bedrijfsprofiel heeft, zet je de URL hier neer en wordt het
+     * vanzelf een werkende link.
+     */
+    googleProfileUrl: null as string | null,
+    /** Wordt getoond zolang er nog geen echt profiel gekoppeld is */
+    googlePlaceholderLabel: "Hier komen echte Google-reviews",
+    googleLinkLabel: "Bekijk op Google",
   },
 
   reviews: [
@@ -595,7 +663,7 @@ export const siteConfig = {
     eyebrow: "Offerte",
     title: "Vraag een vrijblijvende offerte aan",
     subtitle:
-      "Vier korte vragen, ongeveer een minuut werk. U krijgt binnen 2 werkdagen een reactie van ons.",
+      `Vier korte vragen, ongeveer een minuut werk. U krijgt ${within(claims.responseTime, "zo snel mogelijk")} een reactie van ons.`,
     /** Labels in de voortgangsbalk — bepalen ook het aantal stappen niet, dat is vast op 4 */
     stepLabels: ["Werkzaamheden", "Locatie", "Planning", "Contactgegevens"],
     estimatedTime: "± 1 minuut",
@@ -615,7 +683,7 @@ export const siteConfig = {
       },
       contact: {
         question: "Hoe kunnen we u bereiken?",
-        help: "U krijgt binnen 2 werkdagen een reactie. We bellen alleen over uw aanvraag.",
+        help: `U krijgt ${within(claims.responseTime, "zo snel mogelijk")} een reactie. We bellen alleen over uw aanvraag.`,
       },
     },
 
@@ -660,7 +728,7 @@ export const siteConfig = {
     /** Wordt getoond na succesvol versturen */
     successTitle: "Bedankt, uw aanvraag staat bij ons binnen",
     successBody:
-      "We nemen binnen 2 werkdagen contact op om een tuinbezoek in te plannen. Haast? Bel of app ons gerust.",
+      `We nemen ${within(claims.responseTime, "zo snel mogelijk")} contact op om een tuinbezoek in te plannen. Haast? Bel of app ons gerust.`,
   },
 
   // ─────────────────────────────────────────────────────────────────── FAQ ────
@@ -680,7 +748,7 @@ export const siteConfig = {
       },
       {
         q: "Hoe snel kunnen jullie beginnen?",
-        a: "Voor onderhoud en kleinere klussen meestal binnen 1 tot 2 weken. Voor een complete tuinaanleg is de wachttijd afhankelijk van het seizoen: reken in het voorjaar op 6 tot 10 weken. We zeggen altijd eerlijk wanneer we kunnen.",
+        a: "Voor onderhoud en kleinere klussen meestal binnen 1 tot 2 weken. Voor een complete tuinaanleg is de wachttijd afhankelijk van het seizoen: reken in het voorjaar op een aantal weken. We zeggen altijd eerlijk wanneer we kunnen.",
       },
       {
         q: "Kan ik foto's van mijn tuin via WhatsApp sturen?",
@@ -688,7 +756,13 @@ export const siteConfig = {
       },
       {
         q: "Wat kost een nieuwe tuin ongeveer?",
-        a: "Dat hangt af van de oppervlakte, de materialen en de bereikbaarheid van de tuin. Een complete aanleg begint meestal rond € 7.500; bestrating rekenen we vanaf ongeveer € 85 per m². In de offerte staat alles per onderdeel, zodat u zelf kunt schuiven.",
+        /**
+         * Bewust zonder bedragen in het master-template: tarieven verschillen
+         * per bedrijf. Vul hier de echte richtprijzen van de klant in zodra je
+         * de site personaliseert (en zet dan ook display.showPriceIndications
+         * aan).
+         */
+        a: "Dat hangt af van de oppervlakte, de materialen en de bereikbaarheid van de tuin. We maken daarom altijd eerst een opname ter plaatse. In de offerte staat vervolgens alles per onderdeel uitgesplitst, zodat u zelf kunt schuiven met wat wel en niet doorgaat.",
       },
       {
         q: "Doen jullie ook alleen onderhoud?",
