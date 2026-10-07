@@ -143,4 +143,3 @@ components. De rest rendert op de server.
 - Alle foto's via `next/image` (AVIF/WebP, responsive sizes); alleen de
   hero laadt met `priority`.
 - Fonts via `next/font` (self-hosted, geen externe request, geen layout shift).
-# landscaping
